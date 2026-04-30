@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Phone, ArrowRight, Eye, EyeOff } from 'lucide-react';
+import { Mail, ArrowRight, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const GoogleIcon = () => (
@@ -13,24 +13,20 @@ const GoogleIcon = () => (
 );
 
 const Login = () => {
-  const [method, setMethod] = useState(null);
+  const [showEmail, setShowEmail] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [phone, setPhone] = useState('');
-  const [otp, setOtp] = useState('');
-  const [otpSent, setOtpSent] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const { loginWithGoogle, loginWithEmail, sendOTP, verifyOTP } = useAuth();
+  const { loginWithGoogle, loginWithEmail } = useAuth();
   const navigate = useNavigate();
 
   const handleGoogleLogin = async () => {
     setError('');
     const { error } = await loginWithGoogle();
     if (error) setError(error.message);
-    // redirect handled by Supabase OAuth
   };
 
   const handleEmailLogin = async (e) => {
@@ -38,26 +34,6 @@ const Login = () => {
     if (!email || !password) return;
     setLoading(true); setError('');
     const { error } = await loginWithEmail(email, password);
-    setLoading(false);
-    if (error) setError(error.message);
-    else navigate('/listings');
-  };
-
-  const handleSendOTP = async (e) => {
-    e.preventDefault();
-    if (!phone) return;
-    setLoading(true); setError('');
-    const { error } = await sendOTP(phone);
-    setLoading(false);
-    if (error) setError(error.message);
-    else setOtpSent(true);
-  };
-
-  const handleVerifyOTP = async (e) => {
-    e.preventDefault();
-    if (!otp) return;
-    setLoading(true); setError('');
-    const { error } = await verifyOTP(phone, otp);
     setLoading(false);
     if (error) setError(error.message);
     else navigate('/listings');
@@ -71,15 +47,17 @@ const Login = () => {
           <p style={{ color: 'var(--text-secondary)' }}>Log in to your Roomly account</p>
         </div>
 
-        {/* Error */}
+        {/* Error banner */}
         {error && (
-          <div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '10px', padding: '12px 16px', marginBottom: '16px', color: '#dc2626', fontSize: '0.88rem' }}>
+          <div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: '10px', padding: '12px 16px', marginBottom: '20px', color: '#dc2626', fontSize: '0.88rem' }}>
             {error}
           </div>
         )}
 
         {/* Google */}
-        <button onClick={handleGoogleLogin} disabled={loading}
+        <button
+          onClick={handleGoogleLogin}
+          disabled={loading}
           style={{ width: '100%', padding: '14px', borderRadius: '12px', border: '1px solid var(--border-light)', background: 'var(--bg-card)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', fontSize: '1rem', fontFamily: 'var(--font-body)', fontWeight: 500, color: 'var(--text-primary)', marginBottom: '16px', transition: 'all 0.2s' }}
           onMouseOver={e => { e.currentTarget.style.background = 'var(--bg-primary)'; e.currentTarget.style.borderColor = 'var(--text-secondary)'; }}
           onMouseOut={e => { e.currentTarget.style.background = 'var(--bg-card)'; e.currentTarget.style.borderColor = 'var(--border-light)'; }}
@@ -88,36 +66,43 @@ const Login = () => {
         </button>
 
         {/* Divider */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', margin: '24px 0' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', margin: '20px 0' }}>
           <div style={{ flex: 1, height: '1px', background: 'var(--border-light)' }}></div>
           <span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>or</span>
           <div style={{ flex: 1, height: '1px', background: 'var(--border-light)' }}></div>
         </div>
 
-        {/* Method selector */}
-        {!method && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <button onClick={() => setMethod('email')} className="btn-outline" style={{ width: '100%', padding: '14px', justifyContent: 'center' }}>
-              <Mail size={18} /> Continue with Email
-            </button>
-            <button onClick={() => setMethod('phone')} className="btn-outline" style={{ width: '100%', padding: '14px', justifyContent: 'center' }}>
-              <Phone size={18} /> Continue with Phone
-            </button>
-          </div>
-        )}
-
-        {/* Email form */}
-        {method === 'email' && (
+        {/* Email toggle / form */}
+        {!showEmail ? (
+          <button
+            onClick={() => setShowEmail(true)}
+            className="btn-outline"
+            style={{ width: '100%', padding: '14px', justifyContent: 'center' }}
+          >
+            <Mail size={18} /> Continue with Email
+          </button>
+        ) : (
           <form onSubmit={handleEmailLogin} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <div>
               <label style={{ display: 'block', marginBottom: '6px', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Email address</label>
-              <input type="email" className="input-field" placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)} autoFocus />
+              <input
+                type="email" className="input-field"
+                placeholder="you@example.com"
+                value={email} onChange={e => setEmail(e.target.value)}
+                autoFocus required
+              />
             </div>
             <div>
               <label style={{ display: 'block', marginBottom: '6px', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Password</label>
               <div style={{ position: 'relative' }}>
-                <input type={showPassword ? 'text' : 'password'} className="input-field" placeholder="Enter your password" value={password} onChange={e => setPassword(e.target.value)} style={{ paddingRight: '48px' }} />
-                <button type="button" onClick={() => setShowPassword(!showPassword)} style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', display: 'flex' }}>
+                <input
+                  type={showPassword ? 'text' : 'password'} className="input-field"
+                  placeholder="Enter your password"
+                  value={password} onChange={e => setPassword(e.target.value)}
+                  style={{ paddingRight: '48px' }} required
+                />
+                <button type="button" onClick={() => setShowPassword(!showPassword)}
+                  style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', display: 'flex' }}>
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
@@ -125,39 +110,14 @@ const Login = () => {
             <button type="submit" className="btn-primary" style={{ width: '100%', padding: '14px', opacity: loading ? 0.7 : 1 }} disabled={loading}>
               {loading ? 'Logging in...' : 'Log In'} <ArrowRight size={18} />
             </button>
-            <button type="button" onClick={() => { setMethod(null); setError(''); }} style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '0.9rem', fontFamily: 'var(--font-body)' }}>
+            <button type="button" onClick={() => { setShowEmail(false); setError(''); }}
+              style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '0.9rem', fontFamily: 'var(--font-body)' }}>
               ← Other options
             </button>
           </form>
         )}
 
-        {/* Phone form */}
-        {method === 'phone' && (
-          <form onSubmit={otpSent ? handleVerifyOTP : handleSendOTP} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <div>
-              <label style={{ display: 'block', marginBottom: '6px', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Phone number</label>
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <div className="input-field" style={{ width: '70px', flexShrink: 0, textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}>+91</div>
-                <input type="tel" className="input-field" placeholder="98765 43210" value={phone} onChange={e => setPhone(e.target.value)} disabled={otpSent} autoFocus />
-              </div>
-            </div>
-            {otpSent && (
-              <div>
-                <label style={{ display: 'block', marginBottom: '6px', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Enter OTP</label>
-                <input type="text" className="input-field" placeholder="6-digit OTP" value={otp} onChange={e => setOtp(e.target.value)} maxLength={6} autoFocus />
-                <p style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', marginTop: '8px' }}>Code sent to +91 {phone}</p>
-              </div>
-            )}
-            <button type="submit" className="btn-primary" style={{ width: '100%', padding: '14px', opacity: loading ? 0.7 : 1 }} disabled={loading}>
-              {loading ? 'Please wait...' : otpSent ? 'Verify & Log In' : 'Send OTP'} <ArrowRight size={18} />
-            </button>
-            <button type="button" onClick={() => { setMethod(null); setOtpSent(false); setError(''); }} style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '0.9rem', fontFamily: 'var(--font-body)' }}>
-              ← Other options
-            </button>
-          </form>
-        )}
-
-        <div style={{ textAlign: 'center', marginTop: '32px', paddingTop: '24px', borderTop: '1px solid var(--border-light)' }}>
+        <div style={{ textAlign: 'center', marginTop: '28px', paddingTop: '20px', borderTop: '1px solid var(--border-light)' }}>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
             Don't have an account?{' '}
             <Link to="/signup" style={{ color: 'var(--accent-primary)', fontWeight: 600 }}>Sign up</Link>
