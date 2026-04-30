@@ -110,25 +110,51 @@ const RoomDetail = () => {
 
   return (
     <div style={{ paddingBottom: '100px' }}>
-      {/* Gallery */}
-      <div style={{ width: '100%', height: '55vh', position: 'relative', overflow: 'hidden', background: 'var(--bg-card)' }}>
+
+      {/* ── MAIN PHOTO ── */}
+      <div style={{ width: '100%', height: '55vh', background: '#111', overflow: 'hidden' }}>
         <img
           src={room.images?.[activeImg] || '/assets/room_interior.png'}
           alt={room.title}
           style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'opacity 0.3s ease' }}
         />
-        <div style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: '40%', background: 'linear-gradient(to bottom, transparent, var(--bg-primary))' }} />
-        {/* Thumb row */}
-        {room.images?.length > 1 && (
-          <div style={{ position: 'absolute', bottom: '20px', left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: '8px' }}>
-            {room.images.map((img, i) => (
-              <img key={i} src={img} alt="" className={`gallery-thumb${activeImg === i ? ' active' : ''}`} onClick={() => setActiveImg(i)} />
-            ))}
-          </div>
-        )}
       </div>
 
-      <div className="container" style={{ position: 'relative', marginTop: '-80px', zIndex: 10, display: 'flex', gap: '32px', flexWrap: 'wrap', alignItems: 'flex-start' }}>
+      {/* ── THUMBNAIL STRIP (always visible below the main photo) ── */}
+      {room.images?.length > 1 && (
+        <div style={{
+          background: 'var(--bg-card)',
+          borderBottom: '1px solid var(--border-light)',
+          padding: '12px 24px',
+          display: 'flex',
+          gap: '10px',
+          overflowX: 'auto',
+          alignItems: 'center',
+        }}>
+          <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 600, flexShrink: 0, marginRight: '4px' }}>📷 Photos</span>
+          {room.images.map((img, i) => (
+            <img
+              key={i}
+              src={img}
+              alt={`Photo ${i + 1}`}
+              onClick={() => setActiveImg(i)}
+              style={{
+                width: '90px',
+                height: '64px',
+                objectFit: 'cover',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                flexShrink: 0,
+                border: activeImg === i ? '2px solid var(--accent-primary)' : '2px solid transparent',
+                opacity: activeImg === i ? 1 : 0.65,
+                transition: 'all 0.15s ease',
+              }}
+            />
+          ))}
+        </div>
+      )}
+
+      <div className="container" style={{ marginTop: '32px', display: 'flex', gap: '32px', flexWrap: 'wrap', alignItems: 'flex-start' }}>
         {/* ─── MAIN ─── */}
         <div style={{ flex: '1 1 560px', minWidth: 0 }}>
 
