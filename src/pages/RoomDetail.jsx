@@ -112,11 +112,11 @@ const RoomDetail = () => {
     <div style={{ paddingBottom: '100px' }}>
 
       {/* ── MAIN PHOTO ── */}
-      <div style={{ width: '100%', height: '55vh', background: '#111', overflow: 'hidden' }}>
+      <div style={{ width: '100%', maxHeight: '72vh', background: '#0f0f0f', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
         <img
           src={room.images?.[activeImg] || '/assets/room_interior.png'}
           alt={room.title}
-          style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'opacity 0.3s ease' }}
+          style={{ maxWidth: '100%', maxHeight: '72vh', width: 'auto', height: 'auto', objectFit: 'contain', display: 'block', transition: 'opacity 0.3s ease' }}
         />
       </div>
 
