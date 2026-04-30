@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { MapPin, Wifi, Wind, Coffee, Star, MessageCircle, Users, Navigation, BadgeCheck, Heart, Calculator, Flag, X, Zap, Utensils, ShowerHead, Car, WashingMachine, Thermometer } from 'lucide-react';
 import { mockListings } from '../data/listings';
+import { supabase } from '../lib/supabase';
 import { useWishlist } from '../context/WishlistContext';
 import RentSplitCalculator from '../components/RentSplitCalculator';
 
@@ -30,10 +31,67 @@ const RoomDetail = () => {
   const [showReport, setShowReport] = useState(false);
   const [reportReason, setReportReason] = useState('');
   const [reportSent, setReportSent] = useState(false);
+  const [room, setRoom] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const room = mockListings.find(l => l.id === Number(id)) || mockListings[0];
+  useEffect(() => {
+    const fetchRoom = async () => {
+      setLoading(true);
+      // Try Supabase first
+      const { data, error } = await supabase
+        .from('listings')
+        .select('*, listing_images(url, order), reviews(stars, text, reviewer_name)')
+        .eq('id', id)
+        .single();
+
+      if (data && !error) {
+        // Normalize DB row to app shape
+        setRoom({
+          id: data.id,
+          title: data.title,
+          price: data.price,
+          distance: data.walk_time || `${data.distance_km} km`,
+          distanceKm: data.distance_km,
+          rating: data.rating || 4.5,
+          images: data.listing_images?.sort((a, b) => a.order - b.order).map(i => i.url) || ['/assets/room_interior.png'],
+          isOccupied: data.is_occupied,
+          lookingForRoommate: data.looking_for_roommate,
+          occupantName: data.occupant_name,
+          occupantYear: data.occupant_year,
+          occupantPhone: data.occupant_phone,
+          postedByRole: data.posted_by_role || 'owner',
+          address: data.address,
+          landmark: data.landmark,
+          verified: data.verified || false,
+          availableFrom: data.available_from,
+          amenities: data.amenities || [],
+          college: data.college,
+          reviews: data.reviews?.map(r => ({ name: r.reviewer_name, stars: r.stars, text: r.text })) || [],
+          roommateProfile: data.roommate_profile || null,
+        });
+      } else {
+        // Fall back to mock data
+        const mock = mockListings.find(l => l.id === Number(id)) || mockListings[0];
+        setRoom(mock);
+      }
+      setLoading(false);
+    };
+    fetchRoom();
+  }, [id]);
+
+  if (loading) return (
+    <div style={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>
+        <div style={{ width: '40px', height: '40px', border: '3px solid var(--border-light)', borderTopColor: 'var(--accent-primary)', borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto 12px' }}></div>
+        <p>Loading listing...</p>
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      </div>
+    </div>
+  );
+
+  if (!room) return <div className="container" style={{ paddingTop: '120px' }}>Listing not found.</div>;
+
   const saved = isSaved(room.id);
-
   const directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(room.address)}`;
   const whatsappUrl = room.occupantPhone
     ? `https://wa.me/91${room.occupantPhone}?text=${encodeURIComponent(`Hi! I saw your listing on Roomly: "${room.title}" near NSEC. I'm interested. Can we talk?`)}`
